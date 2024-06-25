@@ -5,6 +5,7 @@ Created on 6th September 2017
 """
 
 import logging
+import importlib
 
 from odin.adapters.adapter import (
     ApiAdapter,
@@ -20,7 +21,6 @@ from tornado import escape
 from tornado.escape import json_decode
 
 from odin_data.control.odin_data_controller import OdinDataController
-
 
 class OdinDataAdapter(ApiAdapter):
     """
@@ -57,8 +57,13 @@ class OdinDataAdapter(ApiAdapter):
         # Setup the time between client update requests
         self._update_interval = float(self.options.get("update_interval", 0.5))
 
-        # Create the Frame Processor Controller object
-        self._controller = OdinDataController(
+        if "controller" in self._kwargs:
+            module_name, class_name  = kwargs.get("controller").rsplit(".", 1)
+            controller_module = importlib.import_module(module_name)
+            controller_cls = getattr(controller_module, class_name)
+        else:
+            controller_cls = OdinDataController
+        self._controller = controller_cls(
             self.name, self._endpoint_arg, self._update_interval
         )
 
@@ -82,7 +87,7 @@ class OdinDataAdapter(ApiAdapter):
             logging.error("{}".format(response))
         except ParameterTreeError as param_error:
             response = {
-                "response": "OdinDatatAdapter GET error: {}".format(param_error)
+                "response": "OdinDataAdapter GET error: {}".format(param_error)
             }
             status_code = 400
 
@@ -109,7 +114,7 @@ class OdinDataAdapter(ApiAdapter):
             self._controller.put(path, json_decode(request.body))
         except ParameterTreeError as param_error:
             response = {
-                "response": "OdinDatatAdapter GET error: {}".format(param_error)
+                "response": "OdinDataAdapter GET error: {}".format(param_error)
             }
             status_code = 400
 

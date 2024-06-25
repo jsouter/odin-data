@@ -38,11 +38,12 @@ class OdinDataController(object):
             self._client_connections.append(False)
 
         _tree = {
-            "api": (lambda: self._api, None, {}),
-            "module": (lambda: self._name, None, {}),
+            "api": (lambda: self._api, {}),
+            "module": (lambda: self._name, {}),
             "endpoints": [],
-            "count": (lambda: len(self._clients), None, {}),
-            "update_interval": (lambda: self._update_interval, None, {}),
+            "count": (lambda: len(self._clients), {}),
+            "update_interval": (lambda: self._update_interval, {}),
+            "controller": (lambda: self.__class__.__name__, {})
         }
         for idx, endpoint in enumerate(self._endpoints):
             _tree["endpoints"].append(
@@ -51,7 +52,7 @@ class OdinDataController(object):
             )
         for idx, _client in enumerate(self._clients):
             _tree[str(idx)] = {
-                "status": {"error": (lambda: self._error, None, {})},
+                "status": {"error": (lambda: self._error, {})},
                 "config": {},
             }
         # TODO: Consider renaming this
