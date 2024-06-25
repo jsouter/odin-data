@@ -1,3 +1,5 @@
+# IDEA: create a generic FrameHandlerAdapter that both FR and FP adapter can use (though this may not be necessary??)
+
 """
 Created on 6th September 2017
 
@@ -18,60 +20,53 @@ from odin.adapters.parameter_tree import (
 )
 from tornado import escape
 from tornado.escape import json_decode
-
-from odin_data.control.frame_processor_controller import FrameProcessorController
-
-FP_ADAPTER_DEFAULT_KEY = "od_fps"
-FP_ADAPTER_KEY = "fp_adapter_key"
+import importlib
 
 
-class FrameProcessorAdapter(ApiAdapter):
-    """
-    OdinDataAdapter class
+def _get_from_controller(controller, path, meta):
+    try:
+        response = controller.get(path, meta)
+        status_code = 200
+        logging.error("{}".format(response))
+    except ParameterTreeError as param_error:
+        response = {"response": "OdinDataAdapter GET error: {}".format(param_error)}
+        status_code = 400
+    return response, status_code
 
-    This class provides the adapter interface between the ODIN server and the ODIN-DATA detector system,
-    transforming the REST-like API HTTP verbs into the appropriate frameProcessor ZeroMQ control messages
-    """
+
+class FrameHandlerAdapter(ApiAdapter):
 
     def __init__(self, **kwargs):
-        """
-        Initialise the OdinDataAdapter object
-
-        :param kwargs:
-        """
-        super(FrameProcessorAdapter, self).__init__(**kwargs)
-
-        logging.debug(kwargs)
-
-        self._kwargs = {}
-        for arg in kwargs:
-            self._kwargs[arg] = kwargs[arg]
-
-        self._fp_adapter_name = kwargs.get(FP_ADAPTER_KEY, FP_ADAPTER_DEFAULT_KEY)
-        self._fp_adapter = None
-
-        # Create the Frame Processor Controller object
-        self._controller = FrameProcessorController(self.name)
+        super(FrameHandlerAdapter, self).__init__(**kwargs)
+        self._kwargs = {k: v for k, v in kwargs.items()}
+        (controller_module_name, controller_class_name) = kwargs.get(
+            "fh_controller"
+        ).rsplit(".", 1)
+        controller_module = importlib.import_module(controller_module_name)
+        self._od_adapter_name = kwargs.get("od_adapter", None)
+        self._fh_controller = getattr(controller_module, controller_class_name)(
+            self.name
+        )
 
     def initialize(self, adapters):
         """Initialize the adapter after it has been loaded.
         Find and record the FR adapter for later error checks
         """
-        if self._fp_adapter_name in adapters:
-            self._fp_adapter = adapters[self._fp_adapter_name]
+        if self._od_adapter_name in adapters:
+            self._od_adapter = adapters[self._od_adapter_name]
             logging.info(
-                "FP adapter initiated connection to OdinData raw adapter: {}".format(
-                    self._fp_adapter_name
+                "Frame Handler adapter initiated connection to OdinData raw adapter: {}".format(
+                    self._od_adapter_name
                 )
             )
         else:
             logging.error(
-                "FP adapter could not connect to the OdinData raw adapter: {}".format(
-                    self._fp_adapter_name
+                "Frame Handler adapter could not connect to the OdinData raw adapter: {}".format(
+                    self._od_adapter_name
                 )
             )
 
-        self._controller.initialize(None, self._fp_adapter)
+        self._controller.initialize(None, self._od_adapter)
 
     @request_types("application/json", "application/vnd.odin-native")
     @response_types("application/json", default="application/json")
@@ -83,20 +78,17 @@ class FrameProcessorAdapter(ApiAdapter):
         :param request: Tornado HTTP request object
         :return: ApiAdapterResponse object to be returned to the client
         """
-        response = {}
-        status_code = 200
         content_type = "application/json"
 
         logging.error("{}".format(path))
-        try:
-            response = self._fp_adapter._controller.get(path, wants_metadata(request))
-            logging.error("{}".format(response))
-        except ParameterTreeError as param_error:
-            response = {
-                "response": "OdinDatatAdapter GET error: {}".format(param_error)
-            }
-            status_code = 400
-
+        response, status_code = _get_from_controller(
+            self._od_adapter._controller, path, wants_metadata(request)
+        )
+        # get from frame handler controller instead if fails
+        if status_code != 200 :
+            response, status_code = _get_from_controller(
+                self._controller, path, wants_metadata(request)
+            )
         return ApiAdapterResponse(
             response, content_type=content_type, status_code=status_code
         )
@@ -117,10 +109,12 @@ class FrameProcessorAdapter(ApiAdapter):
         logging.debug("PUT request: %s", escape.url_unescape(request.body))
 
         try:
-            self._fp_adapter._controller.put(path, json_decode(request.body))
+            self._od_adapter._controller.put(path, json_decode(request.body))
         except Exception:
-            return super(FrameProcessorAdapter, self).put(path, request)
-
+            try:
+                self._controller.put(path, json_decode(request.body))
+            except Exception:
+                return super(FrameProcessorAdapter, self).put(path, request)
         return ApiAdapterResponse(response, status_code=status_code)
 
     def cleanup(self):
