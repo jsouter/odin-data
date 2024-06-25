@@ -47,10 +47,7 @@ class FrameProcessorAdapter(ApiAdapter):
         for arg in kwargs:
             self._kwargs[arg] = kwargs[arg]
 
-        self._fp_adapter_name = FP_ADAPTER_DEFAULT_KEY
-        if FP_ADAPTER_KEY in kwargs:
-            self._fp_adapter_name = kwargs[FP_ADAPTER_KEY]
-
+        self._fp_adapter_name = kwargs.get(FP_ADAPTER_KEY, FP_ADAPTER_DEFAULT_KEY)
         self._fp_adapter = None
 
         # Create the Frame Processor Controller object

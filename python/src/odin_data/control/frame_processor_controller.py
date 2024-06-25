@@ -20,7 +20,7 @@ class FrameProcessorController(object):
         self._file_path = ""
         self._file_prefix = ""
         self._file_extension = "h5"
-        self._fp_params = ParameterTree(
+        self._params = ParameterTree(
             {
                 "module": (lambda: self._name, None, {}),
                 "hdf": {
