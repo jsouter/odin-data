@@ -1,5 +1,13 @@
 [
   {
+    "version": "controllers",
+    "url": "https://jsouter.github.io/odin-data/controllers/"
+  },
+  {
+    "version": "fastcs-dev-rb",
+    "url": "https://jsouter.github.io/odin-data/fastcs-dev-rb/"
+  },
+  {
     "version": "fastcs-dev-split-tornado-commit",
     "url": "https://jsouter.github.io/odin-data/fastcs-dev-split-tornado-commit/"
   }
