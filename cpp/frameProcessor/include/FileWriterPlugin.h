@@ -122,8 +122,6 @@ private:
   static const std::string CONFIG_FRAMES;
   /** Configuration constant for master dataset name */
   static const std::string CONFIG_MASTER_DATASET;
-  /** Configuration constant for starting and stopping writing of frames */
-  static const std::string CONFIG_WRITE;
   /** Configuration constant for the acquisition id */
   static const std::string ACQUISITION_ID;
   /** Configuration constant for the close file timeout */
@@ -136,7 +134,9 @@ private:
   static const std::string FLUSH_ERROR_DURATION;
   static const std::string CLOSE_ERROR_DURATION;
 
+  /** Command name to enable writing of frames to file */
   static const std::string START_WRITING;
+  /** Command name to disable writing of frames to file */
   static const std::string STOP_WRITING;
 
   /**

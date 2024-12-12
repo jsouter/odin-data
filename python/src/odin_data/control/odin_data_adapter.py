@@ -57,8 +57,7 @@ class OdinDataAdapter(ApiAdapter):
 
         # Setup the time between client update requests
         self._update_interval = float(self.options.get("update_interval", 0.5))
-
-        # Create the Frame Processor Controller object
+        # Create the Controller object
         self._controller = self._controller_cls(
             self.name, self._endpoint_arg, self._update_interval
         )

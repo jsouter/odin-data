@@ -54,7 +54,6 @@ const std::string FileWriterPlugin::CONFIG_DELETE_DATASETS             = "delete
 
 const std::string FileWriterPlugin::CONFIG_FRAMES                      = "frames";
 const std::string FileWriterPlugin::CONFIG_MASTER_DATASET              = "master";
-const std::string FileWriterPlugin::CONFIG_WRITE                       = "write";
 const std::string FileWriterPlugin::ACQUISITION_ID                     = "acquisition_id";
 const std::string FileWriterPlugin::CLOSE_TIMEOUT_PERIOD               = "timeout_timer_period";
 const std::string FileWriterPlugin::START_CLOSE_TIMEOUT                = "start_timeout_timer";
